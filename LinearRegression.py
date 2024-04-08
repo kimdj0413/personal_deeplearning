@@ -1,5 +1,5 @@
 #####선형회귀 보험 데이터 셋#####
-#github
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 #선형회귀 라이브러리
