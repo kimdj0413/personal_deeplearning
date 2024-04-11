@@ -18,7 +18,7 @@ data['class'].unique() #목표변수 고윳값 출력
 data['class'].nunique() #고윳값 가짓수 출력
 data['class'].value_counts() #각 고윳값에 해당하는 개수 출력
 # sns.barplot(x = data['class'].value_counts().index, y = data['class'].value_counts()) #막대그래프로 확인
-sns.countplot(data['class']) #더 쉽게 막대그래프 그리기
+#sns.countplot(data['class']) #더 쉽게 막대그래프 그리기
 # plt.show()
 """
 #결측치 처리하기
@@ -74,14 +74,14 @@ from sklearn.metrics import accuracy_score
 
 scores = []
 for i in range(1,21):
-    knn = KNeighborsClassifier(n_neighbors=13) #모델 생성(예측에 참고할 이웃 수 = 13(기본은 5))
-    #for문 돌려서 range(1,21)에서 정확도가 가장 높은 것으로 이웃 수 책정(13)
+    knn = KNeighborsClassifier(n_neighbors=i) #모델 생성(예측에 참고할 이웃 수 = i(기본은 5))
+    #for문 돌려서 range(1,21)에서 정확도가 가장 높은 것으로 이웃 수 책정(i=13)
     knn.fit(X_train_scaled,y_train) #학습
     pred = knn.predict(X_test_scaled) #예측
     acc = accuracy_score(y_test, pred) #평가
     scores.append(acc) #평가 저장
 
-   
+print(scores)
 sns.lineplot(x=range(1,21), y=scores)
 plt.show()
     
