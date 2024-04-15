@@ -84,4 +84,3 @@ for i in range(1,21):
 print(scores)
 sns.lineplot(x=range(1,21), y=scores)
 plt.show()
-    
