@@ -133,14 +133,79 @@ data = pd.get_dummies(data, columns=['name', 'fuel', 'seller_type', 'transmissio
 ### 모델링 및 평가  ###
 ######################
 
+    #RMSE 평가
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(data.drop('selling_price', axis=1), data['selling_price'], test_size=0.2, random_state=100)
 from sklearn.ensemble import RandomForestRegressor
 
-model = RandomForestRegressor(random_state=100) #랜덤 포레스트는 매번 다르게 나무를 만드므로 random state를 지정하면 동일하게 가능
-model.fit(X_train, y_train)
-train_pred = model.predict(X_train)
-test_pred = model.predict(X_test)
+# model = RandomForestRegressor(random_state=100) #랜덤 포레스트는 매번 다르게 나무를 만드므로 random state를 지정하면 동일하게 가능
+# model.fit(X_train, y_train)
+# train_pred = model.predict(X_train)
+# test_pred = model.predict(X_test)
 
 from sklearn.metrics import mean_squared_error #RMSE를 사용한 평가
-print(mean_squared_error(y_train, train_pred)**0.5, mean_squared_error(y_test, test_pred)**0.5)
+# print(mean_squared_error(y_train, train_pred)**0.5, mean_squared_error(y_test, test_pred)**0.5)
+
+    #K-폴드 교차검증
+##  데이터를 K개로 쪼개 그 중 하나씩 선택해서 시험셋으로 사용 후 K번 반복해 평가.
+from sklearn.model_selection import KFold
+# print(data) #인덱스 값과 줄의 길이가 맞지 않음
+data.reset_index(drop=True, inplace=True) #인덱스를 다시 맞춤, drop=True를 안하면 기존 인덱스 값을 새로운 칼럼으로 가져옴.
+# print(data)
+
+kf = KFold(n_splits=5) #5개 분할 KFold 객체 생성
+X = data.drop('selling_price', axis=1)
+y = data['selling_price']
+# for i,j in kf.split(X): #5개로 나뉘어진 분할 확인(훈렷셋, 시험셋으로 나뉘므로 두개인 인덱스 필요)
+#     print(i,j)
+
+# train_rmse_total = []
+# test_rmse_total = []
+
+# for train_index, test_index in kf.split(X):
+#     X_train, X_test = X.loc[train_index], X.loc[test_index]
+#     y_train, y_test = y[train_index], y[test_index]
+
+#     model = RandomForestRegressor(random_state=100)
+#     model.fit(X_train,y_train)
+#     train_pred = model.predict(X_train)
+#     test_pred = model.predict(X_test)
+
+#     train_rmse = mean_squared_error(y_train, train_pred)**0.5
+#     test_rmse = mean_squared_error(y_test, test_pred)**0.5
+#     train_rmse_total.append(train_rmse)
+#     test_rmse_total.append(test_rmse)
+
+# print("train_rmse: ", sum(train_rmse_total)/5, " test_rmse: ",sum(test_rmse_total)/5)
+
+##  랜덤 포레스트는 오버피팅을 막는데 효율적.
+##  전체 트리를 사용하는게 아니라 일부만 사용해서 단순 예측력을 떨어짐.
+
+##############################
+### 하이퍼 파라미터 튜닝    ###
+##############################
+
+##  n_estimators : 결정트리 개수(기본값 100개)
+##  max_depth : 트리의 최대 깊이 제한
+##  min_samples_split : 노드를 나눌것인지 말지.
+##  min_samples_leaf : 분리된 노드의 데이터에 최소 몇 개의 데이터가 있어야 할지 결정.
+##  n_jobs : 병렬 처리에 사용되는 CPU 코어 수. -1은 모든 코어 사용.
+train_rmse_total = []
+test_rmse_total = []
+
+for train_index, test_index in kf.split(X):
+    X_train, X_test = X.loc[train_index], X.loc[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+
+    model = RandomForestRegressor(n_estimators=300,max_depth=50,min_samples_split=5,min_samples_leaf=1,n_jobs=-1,random_state=100)
+    model.fit(X_train,y_train)
+    train_pred = model.predict(X_train)
+    test_pred = model.predict(X_test)
+
+    train_rmse = mean_squared_error(y_train, train_pred)**0.5
+    test_rmse = mean_squared_error(y_test, test_pred)**0.5
+    train_rmse_total.append(train_rmse)
+    test_rmse_total.append(test_rmse)
+
+print("train_rmse: ", sum(train_rmse_total)/5, " test_rmse: ",sum(test_rmse_total)/5)
+##  하이퍼파라미터 튜닝으로 오버피팅이 줄어들었으니 그 전보다 좋은 모델.
