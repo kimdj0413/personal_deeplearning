@@ -66,5 +66,81 @@ def mile(x):
         return x['mileage'] / 44.23
     
 data['mileage'] = data.apply(mile, axis=1) #axxis=1을 하는 이유는 그렇지 않으면 컬럼명을 컬럼에서 찾지않고 인덱스에서 찾음.
-print(data['mileage'])
 data.drop('mileage_unit', axis=1, inplace=True)
+
+###############################
+### torque 변수 처리하기    ###
+##############################
+
+data['torque'] = data['torque'].str.upper()
+
+def toruque_unit(x):
+    if 'NM' in str(x):
+        return 'Nm'
+    elif 'KGM' in str(x):
+        return 'kgm'
+    
+data['torque_unit'] = data['torque'].apply(toruque_unit) #null 값도 존재하니 확인
+# print(data[data['torque_unit'].isna()]['torque'].unique()) #torque_unit이 결측치인 라인의 torque 변수 고윳값 확인
+data['torque_unit'].fillna('Nm', inplace=True) #결측치를 Nm으로 채움
+
+#     #enumerate 함수 활용
+# string_example = '12,7@ 2,700(KGM@ RPM)'
+# for i, j in enumerate(string_example):
+#     print(i,'번째 텍스트: ',j)
+#     #반환값을 받는 변수가 두개(i,j)여서 인덱스 값과 그에 해당하는 값 리턴
+
+def split_num(x):
+    x = str(x) #여러 자료형이 있을 수 있으니 확실히 문자열로 형변환
+    for i,j in enumerate(x):
+        if j not in '0123456789.':
+            cut = i
+            break
+    return x[:cut]
+
+data['torque'] = data['torque'].apply(split_num)
+data['torque'] = data['torque'].replace('',np.NaN) #''를 결측치로 대체(형변환을 위해)
+data['torque'] = data['torque'].astype('float64') #형변환
+
+def torque_trans(x): #단위 통일 함수
+    if x['torque_unit'] == 'kgm':
+        return x['torque']*9.8066
+    else:
+        return x['torque']
+    
+data['torque'] = data.apply(torque_trans, axis=1)
+data.drop('torque_unit', axis=1, inplace=True)
+
+###########################
+### name 변수 처리하기  ###
+##########################
+
+data['name'] = data['name'].str.split(expand=True)[0] #띄어쓰기 기준으로 맨 처음 값만 저장
+# print(data['name'].unique()) #Lnad Rover가 Land만 나옴
+data['name'] = data['name'].replace('Land','Land Rover')
+
+######################################
+### 결측치 처리 및 더미 변수 변환   ###
+######################################
+
+# print(len(data)) #길이 : 8128
+# print(data.isna().mean()) #결측치 비율이 2% 밖에 안되므로 행삭제.
+data.dropna(inplace=True)
+data = pd.get_dummies(data, columns=['name', 'fuel', 'seller_type', 'transmission', 'owner'], drop_first=True) #빈 칼럼을 더미 변수로 변환.
+# print(len(data)) #길이 : 7906
+
+#######################
+### 모델링 및 평가  ###
+######################
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(data.drop('selling_price', axis=1), data['selling_price'], test_size=0.2, random_state=100)
+from sklearn.ensemble import RandomForestRegressor
+
+model = RandomForestRegressor(random_state=100) #랜덤 포레스트는 매번 다르게 나무를 만드므로 random state를 지정하면 동일하게 가능
+model.fit(X_train, y_train)
+train_pred = model.predict(X_train)
+test_pred = model.predict(X_test)
+
+from sklearn.metrics import mean_squared_error #RMSE를 사용한 평가
+print(mean_squared_error(y_train, train_pred)**0.5, mean_squared_error(y_test, test_pred)**0.5)
