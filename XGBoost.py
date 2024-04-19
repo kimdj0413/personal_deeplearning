@@ -108,7 +108,7 @@ import xgboost as xgb
 # model.fit(X_train, y_train)
 
 # pred = model.predict(X_test)
-# from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 # # print(accuracy_score(y_test, pred))
 # # print(confusion_matrix(y_test, pred)) #편향된 데이터임을 판별
 # # print(classification_report(y_test, pred))
@@ -117,41 +117,42 @@ import xgboost as xgb
 # ### 하이퍼파라미터튜닝 : 그리드 서치    ###
 # ##########################################
 
-# ##  파라미터 값들을 설정 해주면 조합해서 최적의 파라미터를 찾아줌
-# from sklearn.model_selection import GridSearchCV
+##  파라미터 값들을 설정 해주면 조합해서 최적의 파라미터를 찾아줌
+from sklearn.model_selection import GridSearchCV
 
-# parameters = {
-#     'learning_rate' : [0.01, 0.1, 0.3],
-#     'max_depth' : [5, 7, 10],
-#     'subsample' : [0.5, 0,7, 1],
-#     'n_estimators' : [300, 500, 1000]
-# }
-# ##  learning_rate : 경사하강법에서 '매개변수'를 얼만큼씩 이동할지. XG부스트는 강화된 경사 부스팅.
-# ##  max_depth : 트리의 깊이 제한
-# ##  subsample : 모델을 학습할 때 일부 데이터만 사용하여 트리를 만드는 비율. 오버피팅 방지용.
-# ##  n_estimators : 전체 나무의 개수
+parameters = {
+    'learning_rate' : [0.01, 0.1, 0.3],
+    'max_depth' : [5, 7, 10],
+    'subsample' : [0.5, 0.7, 0.9],
+    'n_estimators' : [300, 500, 1000]
+}
+##  learning_rate : 경사하강법에서 '매개변수'를 얼만큼씩 이동할지. XG부스트는 강화된 경사 부스팅.
+##  max_depth : 트리의 깊이 제한
+##  subsample : 모델을 학습할 때 일부 데이터만 사용하여 트리를 만드는 비율. 오버피팅 방지용.
+##  n_estimators : 전체 나무의 개수
 
-# model = xgb.XGBClassifier()
-# gs_model = GridSearchCV(model, parameters, n_jobs=-1, scoring='f1', cv=5)
+model = xgb.XGBClassifier()
+gs_model = GridSearchCV(model, parameters, n_jobs=-1, scoring='f1', cv=5)
 
-# ##  n_jobs : 사용할 코어 수
-# ##  scoring : 모델링 판단 기준
-# ##  cv : K-폴드 값
+##  n_jobs : 사용할 코어 수
+##  scoring : 모델링 판단 기준
+##  cv : K-폴드 값
 
-# gs_model.fit(X_train, y_train)
-# # print(gs_model.best_params_) #최고의 파라미터를 출력
-# pred = gs_model.predict(X_test)
+gs_model.fit(X_train, y_train)
+print(gs_model.best_params_) #최고의 파라미터를 출력
+pred = gs_model.predict(X_test)
 # print(accuracy_score(y_test, pred))
 # print(classification_report(y_test, pred))
+##  1   (정밀도)    (재현율)    (f-1 점수)
 
 ######################
 ### 중요 변수 확인  ###
 ######################
 
-model = xgb.XGBClassifier(learning_rate=0.3, max_depth=5,n_estimators=1000,subsample=0.5,random_state=100) #최적의 파라미터로 모델 생성
-model.fit(X_train, y_train)
-# print(model.feture_importances_)
-feature_imp = pd.DataFrame({'features':X_train.columns, 'values':model.feature_importances_})
-plt.figure(figsize=(20,10))
-sns.barplot(x='values', y='features', data=feature_imp.sort_values(by='values',ascending=False).head(10))
-plt.show()
+# model = xgb.XGBClassifier(learning_rate=0.3, max_depth=5,n_estimators=1000,subsample=0.5,random_state=100) #최적의 파라미터로 모델 생성
+# model.fit(X_train, y_train)
+# # print(model.feture_importances_)
+# feature_imp = pd.DataFrame({'features':X_train.columns, 'values':model.feature_importances_})
+# plt.figure(figsize=(20,10))
+# sns.barplot(x='values', y='features', data=feature_imp.sort_values(by='values',ascending=False).head(10))
+# plt.show()
