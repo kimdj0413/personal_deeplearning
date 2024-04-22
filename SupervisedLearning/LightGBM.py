@@ -145,3 +145,5 @@ print(roc_auc_score(y_test, rs_proba[:,1]))
 rs_proba_int = (rs_proba[:,1]>0.2).astype('int')
 print(confusion_matrix(y_test, rs_proba_int))
 print(classification_report(y_test, rs_proba_int))
+
+##  XGBoost는 좌우 노드 수가 동일한 균형 분할, LightGMM은 특정 노드에서 뻗어나감.(속도 훨씬 빠름)
